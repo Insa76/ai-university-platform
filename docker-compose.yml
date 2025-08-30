@@ -1,0 +1,58 @@
+
+
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:17
+    container_name: university_db
+    environment:
+      POSTGRES_DB: university
+      POSTGRES_USER: user_uni
+      POSTGRES_PASSWORD: insa2025
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - ai_network
+
+  backend:
+    build: ./backend
+    container_name: university_backend
+    ports:
+      - "3001:3001"
+    environment:
+      - DATABASE_URL=postgresql://user_uni:insa2025@postgres:5432/university
+      - JWT_SECRET=your_jwt_secret_here
+    depends_on:
+      - postgres
+    networks:
+      - ai_network
+
+  frontend:
+    build: ./frontend
+    container_name: university_frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    networks:
+      - ai_network
+
+  ai-service:
+    build: ./ai-service
+    container_name: university_ai
+    ports:
+      - "8000:8000"
+    environment:
+      - MODEL_PATH=/models
+    networks:
+      - ai_network
+
+networks:
+  ai_network:
+    driver: bridge
+
+volumes:
+  postgres_data:
